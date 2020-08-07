@@ -1,13 +1,8 @@
 os: osx
 osx_image: xcode8
 
-addons:
-  homebrew:
-    packages:
-    - autoconf213
-
 install:
-  - brew install libidl llvm@10 node sccache ccache cmake gnu-tar python nasm yasm watchman
+  - brew install autoconf213 libidl llvm node sccache ccache cmake gnu-tar python nasm yasm watchman
 
 script:
 - ./mach build
