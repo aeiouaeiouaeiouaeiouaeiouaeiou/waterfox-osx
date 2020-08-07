@@ -1,8 +1,23 @@
 os: osx
 osx_image: xcode8
 
+addons:
+  homebrew:
+    packages:
+    - autoconf@2.13
+    - cmake
+    - gnu-tar
+    - python
+    - libidl
+    - llvm@10
+    - node
+    - ccache
+    - sccache
+    - mercurial
+    - nasm
+    - yasm
+    - watchman
+
 script:
-- brew update
-- brew install autoconf@2.13 cmake gnu-tar python libidl llvm@10 node ccache sccache mercurial nasm yasm watchman
 - ./mach build
 - ./mach package
