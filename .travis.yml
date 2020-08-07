@@ -4,6 +4,10 @@ osx_image: xcode8
 
 cache: ccache
 
+branches:
+  except:
+  - current
+
 before_install:
 - git checkout classic
 - export COLUMNS=80
