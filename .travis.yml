@@ -5,8 +5,8 @@ osx_image: xcode8
 cache: ccache
 
 branches:
-  except:
-  - current
+  only:
+  - classic
 
 before_install:
 - git checkout classic
