@@ -11,12 +11,15 @@ addons:
     - libidl
     - llvm@10
     - node
-    - ccache
     - sccache
     - mercurial
     - nasm
     - yasm
     - watchman
+
+install:
+  - brew install ccache
+  - export PATH="/usr/local/opt/ccache/libexec:$PATH"
 
 script:
 - ./mach build
