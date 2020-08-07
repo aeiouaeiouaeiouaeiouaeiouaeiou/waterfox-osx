@@ -18,7 +18,7 @@ before_install:
 - export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 
 before_script:
-- sudo port -f install autoconf213 ccache libidl clang-10 nodejs14 cmake gmake gnutar python38 pkgconfig nasm yasm
+- sudo port install autoconf213 ccache libidl clang-10 nodejs14 cmake gmake gnutar python38 pkgconfig nasm yasm
 - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.45.1-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 - cargo install sccache cbindgen
