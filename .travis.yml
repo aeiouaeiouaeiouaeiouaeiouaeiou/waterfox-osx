@@ -5,13 +5,17 @@ cache:
   directories:
   - $HOME/.macports-ci-ccache
 
-script:
-- curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
-- source ./macports-ci install
-- source macports-ci ccache --save
-- port install autoconf213 libidl clang-10 nodejs14 cmake gnutar python38 pkgconfig nasm yasm
+install:
+- export PATH="$HOME/opt/bin:$PATH"
+- wget https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
+- chmod +x ./macports-ci
+- ./macports-ci install
+- PATH="/opt/local/bin:$PATH"
+- sudo port install autoconf213 libidl clang-10 nodejs14 cmake gnutar python38 pkgconfig nasm yasm
 - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.45.1-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
-- cargo install sccache
+- cargo install sccache cbindgen
+
+script:
 - ./mach build
 - ./mach package
