@@ -23,6 +23,5 @@ before_script:
 - export PATH=$PATH:~/.cargo/bin
 
 script:
-- export MOZCONFIG=.mozconfig
 - ./mach build
 - ./mach package
