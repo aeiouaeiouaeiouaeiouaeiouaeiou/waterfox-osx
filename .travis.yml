@@ -4,4 +4,6 @@ osx_image: xcode8
 script:
 - curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
 - source ./macports-ci install
+- sudo port install install autoconf213 python27 libidl ccache yasm clang-10
 - ./mach build
+- ./mach package
