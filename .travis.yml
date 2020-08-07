@@ -1,10 +1,16 @@
 os: osx
 osx_image: xcode7.3
 
-install:
-  - brew install autoconf213 libidl llvm node rust ccache cmake gnu-tar python nasm yasm watchman
-  - cargo install sccache
+cache:
+  directories:
+  - $HOME/.macports-ci-ccache
 
 script:
+- curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
+- source ./macports-ci install
+- source macports-ci ccache
+- port install autoconf213 libidl clang-10 node rust ccache cmake gnu-tar python nasm yasm watchman
+- curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+- cargo install sccache
 - ./mach build
 - ./mach package
