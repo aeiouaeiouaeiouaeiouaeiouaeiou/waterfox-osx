@@ -24,6 +24,5 @@ before_script:
 - cargo install cbindgen
 
 script:
-- export MOZCONFIG=/.mozconfig
 - ./mach build
 - ./mach package
