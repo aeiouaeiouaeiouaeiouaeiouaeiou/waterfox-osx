@@ -18,10 +18,10 @@ before_install:
 
 before_script:
 - sudo port -N install autoconf213 ccache libidl clang-10 cmake gnutar python38 pkgconfig nasm yasm
+- sudo port select --set clang mp-clang-10
 - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.45.1-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 - cargo install cbindgen
-- sudo port select --set clang mp-clang-10
 
 script:
 - export MOZCONFIG=.mozconfig
