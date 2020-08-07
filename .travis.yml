@@ -3,12 +3,14 @@ osx_image: xcode7.3
 
 cache: ccache
 
-install:
+before_install:
+- export PATH="/usr/local/opt/ccache/libexec:$PATH"
 - wget https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
 - chmod +x ./macports-ci
 - ./macports-ci install
+
+install:
 - sudo port -f install autoconf213 ccache curl libidl clang-10 nodejs14 cmake gnutar python38 pkgconfig nasm yasm
-- export PATH="/usr/local/opt/ccache/libexec:$PATH"
 - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.45.1-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 - cargo install sccache cbindgen
