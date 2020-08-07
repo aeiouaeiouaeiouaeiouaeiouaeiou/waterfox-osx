@@ -2,3 +2,4 @@ os: osx
 osx_image: xcode8
 curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
 source ./macports-ci install
+./mach build
