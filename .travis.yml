@@ -9,7 +9,6 @@ branches:
   - classic
 
 before_install:
-- git checkout classic
 - export COLUMNS=80
 - wget https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
 - chmod +x ./macports-ci
@@ -17,8 +16,9 @@ before_install:
 - export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 
 before_script:
-- sudo port -N install autoconf213 ccache libidl cmake gnutar python38 pkgconfig nasm yasm
-- curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.45.2-x86_64-apple-darwin
+- sudo port -N install autoconf213 ccache clang-10 libidl cmake gmake gnutar pkgconfig nasm yasm
+- sudo port select --set clang mp-clang-10
+- curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.45.1-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 
 script:
