@@ -16,7 +16,7 @@ before_install:
 - export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 
 before_script:
-- sudo port -N install autoconf213 ccache cmake gnutar llvm-10 pkgconfig nodejs14 yasm
+- sudo port -N install autoconf213 ccache cmake gnutar pkgconfig nodejs14 yasm
 - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 
