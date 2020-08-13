@@ -17,6 +17,7 @@ before_install:
 
 before_script:
 - sudo port -N install autoconf213 ccache cmake gnutar llvm-10 pkgconfig nodejs14 nasm yasm
+- export LLVM_CONFIG=/opt/local/bin/llvm-config
 - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 - cargo install cbindgen
