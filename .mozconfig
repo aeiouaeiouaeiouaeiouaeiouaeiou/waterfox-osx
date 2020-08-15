@@ -70,7 +70,6 @@ ac_add_options --disable-verify-mar
 
 ac_add_options --enable-application=browser
 ac_add_options --enable-ccache=ccache
-ac_add_options --enable-lto
 # Stick to the same channel as Dev Edition would be
 ac_add_options --enable-update-channel=aurora
 ac_add_options --enable-rust-simd
