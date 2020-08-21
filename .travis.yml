@@ -1,6 +1,6 @@
 os: osx
 language: cpp
-osx_image: xcode8
+osx_image: xcode7.3
 compiler: clang
 cache: ccache
 
@@ -16,7 +16,7 @@ before_install:
 - export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 
 before_script:
-- sudo port -N install autoconf213 ccache gmake gnutar yasm
+- sudo port -N install autoconf213 ccache gmake gnutar pkgconfig yasm
 - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 
