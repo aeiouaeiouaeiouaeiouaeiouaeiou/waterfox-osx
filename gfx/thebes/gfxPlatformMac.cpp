@@ -18,6 +18,7 @@
 #include "nsTArray.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/VsyncDispatcher.h"
+#include "nsCocoaFeatures.h"
 #include "nsUnicodeProperties.h"
 #include "qcms.h"
 #include "gfx2DGlue.h"
@@ -96,6 +97,10 @@ gfxPlatformMac::gfxPlatformMac()
     }
 
     MacIOSurfaceLib::LoadLibrary();
+    
+    if (nsCocoaFeatures::OnHighSierraOrLater()) {
+        mHasNativeColrFontSupport = true;
+    }
 }
 
 gfxPlatformMac::~gfxPlatformMac()
@@ -195,6 +200,8 @@ static const char kFontSongtiSC[] = "Songti SC";
 static const char kFontSTHeiti[] = "STHeiti";
 static const char kFontSTIXGeneral[] = "STIXGeneral";
 static const char kFontTamilMN[] = "Tamil MN";
+static const char kFontTwemojiMozilla[] = "Twemoji Mozilla";
+
 
 void
 gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
@@ -207,7 +214,7 @@ gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
            (aNextCh != kVariationSelector15 &&
             emoji == EmojiPresentation::EmojiDefault)) {
             // if char is followed by VS16, try for a color emoji glyph
-            aFontList.AppendElement(kFontAppleColorEmoji);
+            aFontList.AppendElement(kFontTwemojiMozilla);
         }
     }
 

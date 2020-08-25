@@ -84,7 +84,7 @@
       <li><a href="about:license#dtoa">dtoa License</a></li>
       <li><a href="about:license#fuzz-aldrin">fuzz-aldrin License</a></li>
       <li><a href="about:license#hunspell-nl">Dutch Spellchecking Dictionary License</a></li>
-#if defined(XP_WIN) || defined(XP_LINUX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
       <li><a href="about:license#twemoji">Twemoji License</a></li>
 #endif
       <li><a href="about:license#hunspell-ee">Estonian Spellchecking Dictionary License</a></li>
@@ -3106,7 +3106,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <hr>
 
-#if defined(XP_WIN) || defined(XP_LINUX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
     <h1><a id="twemoji"></a>Twemoji License</h1>
 
     <p>This license applies to the emoji art contained within the bundled

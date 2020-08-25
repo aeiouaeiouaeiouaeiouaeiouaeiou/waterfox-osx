@@ -714,6 +714,10 @@ public:
       return nullptr;
     }
 
+    bool HasNativeColrFontSupport() const {
+      return mHasNativeColrFontSupport;
+    }
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
@@ -796,6 +800,10 @@ protected:
     // whether to always search font cmaps globally
     // when doing system font fallback
     int8_t  mFallbackUsesCmaps;
+
+    // Whether the platform font APIs have native support for COLR fonts.
+    // Set to true during initialization on platforms that implement this.
+    bool    mHasNativeColrFontSupport = false;
 
     // max character limit for words in word cache
     int32_t mWordCacheCharLimit;

@@ -21,6 +21,7 @@ public:
   static bool OnYosemiteOrLater();
   static bool OnElCapitanOrLater();
   static bool OnSierraOrLater();
+  static bool OnHighSierraOrLater();
   static bool OnMojaveOrLater();
 
   static bool IsAtLeastVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix=0);
@@ -44,6 +45,7 @@ private:
 // C-callable helper for cairo-quartz-font.c
 extern "C" {
     bool Gecko_OnSierraOrLater();
+    bool Gecko_OnHighSierraOrLater();
 }
 
 #endif // nsCocoaFeatures_h_
