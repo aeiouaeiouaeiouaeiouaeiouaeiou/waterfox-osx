@@ -4125,7 +4125,7 @@ pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 // enable NSPR logging for module fontInfoLog:5
 // canonical names immediately follow '(fontinit) family:' in the log
 
-pref("font.name-list.emoji", "Apple Color Emoji");
+pref("font.name-list.emoji", "Twemoji Mozilla");
 
 pref("font.name-list.serif.ar", "Al Bayan");
 pref("font.name-list.sans-serif.ar", "Geeza Pro");
