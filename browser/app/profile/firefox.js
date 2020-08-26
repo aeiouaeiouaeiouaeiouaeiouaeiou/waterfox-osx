@@ -1386,13 +1386,7 @@ pref("plain_text.wrap_long_lines", true);
 pref("dom.debug.propagate_gesture_events_through_content", false);
 
 // All the Geolocation preferences are here.
-//
-#ifndef EARLY_BETA_OR_EARLIER
-pref("geo.wifi.uri", "");
-#else
-// Use MLS on Nightly and early Beta.
-pref("geo.wifi.uri", "");
-#endif
+pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
 
 #ifdef XP_MACOSX
 pref("geo.provider.use_corelocation", true);
