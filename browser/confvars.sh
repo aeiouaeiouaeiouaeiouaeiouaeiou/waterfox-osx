@@ -9,8 +9,7 @@ MOZ_UPDATER=1
 MOZ_PHOENIX=1
 
 if test "$OS_ARCH" = "WINNT" -o \
-        "$OS_ARCH" = "Linux" -o \
-        "$OS_ARCH" = "Darwin"; then
+        "$OS_ARCH" = "Linux"; then
   MOZ_BUNDLED_FONTS=1
 fi
 
