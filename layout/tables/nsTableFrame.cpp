@@ -111,6 +111,14 @@ struct TableReflowInput {
       availSize.BSize(wm) = std::max(0, availSize.BSize(wm));
     }
   }
+
+  void ReduceAvailableBSizeBy(WritingMode aWM, nscoord aAmount) {
+    if (availSize.BSize(aWM) == NS_UNCONSTRAINEDSIZE) {
+      return;
+    }
+    availSize.BSize(aWM) -= aAmount;
+    availSize.BSize(aWM) = std::max(0, availSize.BSize(aWM));
+  }
 };
 
 }  // namespace mozilla
@@ -2873,9 +2881,7 @@ void nsTableFrame::PlaceChild(TableReflowInput& aReflowInput,
   aReflowInput.bCoord += aKidDesiredSize.BSize(wm);
 
   // If our bsize is constrained, then update the available bsize
-  if (NS_UNCONSTRAINEDSIZE != aReflowInput.availSize.BSize(wm)) {
-    aReflowInput.availSize.BSize(wm) -= aKidDesiredSize.BSize(wm);
-  }
+  aReflowInput.ReduceAvailableBSizeBy(wm, aKidDesiredSize.BSize(wm));
 }
 
 void nsTableFrame::OrderRowGroups(RowGroupArray& aChildren,
@@ -3110,14 +3116,21 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
   // using the footer's prev-in-flow's height instead of reflowing it again,
   // but there's no real need.
   if (isPaginated) {
+    bool reorder = false;
     if (thead && !GetPrevInFlow()) {
+      reorder = thead->GetNextInFlow();
       nscoord desiredHeight;
       nsresult rv = SetupHeaderFooterChild(aReflowInput, thead, &desiredHeight);
       if (NS_FAILED(rv)) return;
     }
     if (tfoot) {
+      reorder = reorder || tfoot->GetNextInFlow();
       nsresult rv = SetupHeaderFooterChild(aReflowInput, tfoot, &footerHeight);
       if (NS_FAILED(rv)) return;
+    }
+    if (reorder) {
+      // Reorder row groups - the reflow may have changed the nextinflows.
+      OrderRowGroups(rowGroups, &thead, &tfoot);
     }
   }
   // if the child is a tbody in paginated mode reduce the height by a repeated
@@ -3184,13 +3197,10 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
         kidReflowInput.mFlags.mIsTopOfPage = false;
       }
       aReflowInput.bCoord += cellSpacingB;
-      if (NS_UNCONSTRAINEDSIZE != aReflowInput.availSize.BSize(wm)) {
-        aReflowInput.availSize.BSize(wm) -= cellSpacingB;
-      }
+      aReflowInput.ReduceAvailableBSizeBy(wm, cellSpacingB);
       // record the presence of a next in flow, it might get destroyed so we
       // need to reorder the row group array
-      bool reorder = false;
-      if (kidFrame->GetNextInFlow()) reorder = true;
+      const bool reorder = kidFrame->GetNextInFlow();
 
       LogicalPoint kidPosition(wm, aReflowInput.iCoord, aReflowInput.bCoord);
       aStatus.Reset();
@@ -3199,7 +3209,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       kidReflowInput.ApplyRelativePositioning(&kidPosition, containerSize);
 
       if (reorder) {
-        // reorder row groups the reflow may have changed the nextinflows
+        // Reorder row groups - the reflow may have changed the nextinflows.
         OrderRowGroups(rowGroups, &thead, &tfoot);
         childX = rowGroups.IndexOf(kidFrame);
         if (childX == RowGroupArray::NoIndex) {
@@ -3349,10 +3359,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       }
       aReflowInput.bCoord += kidRect.BSize(wm);
 
-      // If our bsize is constrained then update the available bsize.
-      if (NS_UNCONSTRAINEDSIZE != aReflowInput.availSize.BSize(wm)) {
-        aReflowInput.availSize.BSize(wm) -= cellSpacingB + kidRect.BSize(wm);
-      }
+      aReflowInput.ReduceAvailableBSizeBy(wm, cellSpacingB + kidRect.BSize(wm));
     }
   }
 
