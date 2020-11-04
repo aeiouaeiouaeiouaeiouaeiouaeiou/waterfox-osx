@@ -5,7 +5,7 @@
 mk_add_options MOZ_MAKE_FLAGS=-j8
 
 CROSS_CCTOOLS_PATH=$topsrcdir/../osxcross/target
-CROSS_SYSROOT=$CROSS_CCTOOLS_PATH/SDK/MacOSX10.13.sdk
+CROSS_SYSROOT=$CROSS_CCTOOLS_PATH/SDK/MacOSX10.11.sdk
 CROSS_PRIVATE_FRAMEWORKS=$CROSS_SYSROOT/System/Library/PrivateFrameworks
 FLAGS="-target x86_64-apple-darwin15 -B $CROSS_CCTOOLS_PATH/bin -isysroot $CROSS_SYSROOT"
 
@@ -38,16 +38,15 @@ ac_add_options --disable-signmar
 ac_add_options --disable-tests
 ac_add_options --disable-verify-mar
 
-ac_add_options --enable-optimize="-mmacosx-version-min=10.9 -O3 -march=core2 -mtune=core2 -stdlib=libc++ -w"
+ac_add_options --enable-optimize="-mmacosx-version-min=10.8 -O3 -march=core2 -mtune=core2 -stdlib=libc++ -w"
 ac_add_options --enable-release
 
 ac_add_options --target=x86_64-apple-darwin
 # Stick to the same channel as Dev Edition would be
 ac_add_options --enable-update-channel=aurora
 ac_add_options --enable-rust-simd
-ac_add_options --enable-macos-target=10.9
+ac_add_options --enable-macos-target=10.8
 ac_add_options --enable-updater
-ac_add_options --enable-lto
 ac_add_options "MOZ_ALLOW_LEGACY_EXTENSIONS=1"
 
 ac_add_options --with-app-name=waterfox
