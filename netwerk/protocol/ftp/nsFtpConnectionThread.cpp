@@ -1195,7 +1195,7 @@ nsFtpState::R_list() {
         return FTP_READ_BUF;
     }
 
-    if (mResponseCode / 100 == 2 && mRlist1xxReceived) {
+    if (mResponseCode/100 == 2 && mRlist1xxReceived) {
         //(DONE)
         mNextState = FTP_COMPLETE;
         mRlist1xxReceived = false;
