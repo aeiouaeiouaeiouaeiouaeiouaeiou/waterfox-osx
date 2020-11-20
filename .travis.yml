@@ -17,7 +17,7 @@ before_install:
 
 before_script:
 - sudo port -N install autoconf213 ccache gmake gnutar pkgconfig yasm
-- curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.47-x86_64-apple-darwin
+- curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.47.0-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 
 script:
