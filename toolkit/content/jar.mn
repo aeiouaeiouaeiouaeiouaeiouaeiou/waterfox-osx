@@ -66,6 +66,7 @@ toolkit.jar:
    content/global/TopLevelVideoDocument.js
    content/global/timepicker.xhtml
    content/global/treeUtils.js
+   content/global/jsToggle.js
    content/global/viewZoomOverlay.js
    content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
    content/global/bindings/browser.xml         (widgets/browser.xml)
