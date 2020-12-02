@@ -541,7 +541,6 @@ bool GLContext::InitImpl() {
   MOZ_ASSERT(majorVer < 10);
   MOZ_ASSERT(minorVer < 10);
   mVersion = majorVer * 100 + minorVer * 10;
-  if (mVersion < 140) return false;
 
   ////
 
