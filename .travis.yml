@@ -11,15 +11,13 @@ branches:
 before_install:
 - export COLUMNS=80
 - wget https://raw.githubusercontent.com/aeiouaeiouaeiouaeiouaeiouaeiou/macports-ci/master/macports-ci
-- chmod +x ./macports-ci
-- ./macports-ci install
+- chmod +x ./macports-ci && ./macports-ci install
 - export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 
 before_script:
 - sudo port -N install autoconf213 ccache gmake gnutar pkgconfig yasm
-- curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.47.0-x86_64-apple-darwin
+- curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 
 script:
-- ./mach build
-- ./mach package
+- ./mach build && ./mach package
