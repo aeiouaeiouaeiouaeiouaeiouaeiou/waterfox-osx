@@ -481,8 +481,7 @@
             <menu id="tools-menu"
                   label="&toolsMenu.label;"
                   accesskey="&toolsMenu.accesskey;"
-                  onpopupshowing="mirrorShow(this);
-                                    jsToggle.updateMenu();">
+                  onpopupshowing="mirrorShow(this)">
               <menupopup id="menu_ToolsPopup">
               <menuitem id="menu_openDownloads"
                         label="&downloads.label;"
@@ -511,12 +510,6 @@
                         accesskey="&syncReAuthItem.accesskey;"
                         observes="sync-reauth-state"
                         oncommand="gSync.openSignInAgainPage('menubar');"/>
-              <menuseparator/>
-              <menuitem id="toggle_javascript"
-                        label="&JavascriptToggleCmd.label;"
-                        type="checkbox"
-                        command="cmd_toggleJavascript"
-                        checked="true"/>
               <menuseparator id="devToolsSeparator"/>
               <menu id="webDeveloperMenu"
                     label="&webDeveloperMenu.label;"
