@@ -82,15 +82,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
-    JS::Value val = tmp->GetJSValPreserveColor();
+  JS::Value val = tmp->GetJSValPreserveColor();
+  bool unroot = val.isGCThing();
 
-    tmp->mData.Cleanup();
+  tmp->mData.Cleanup();
 
-    if (val.isGCThing()) {
-        XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(tmp);
-        v->RemoveFromRootSet();
-    }
-    tmp->mJSVal = JS::NullValue();
+  if (unroot) {
+    XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(tmp);
+    v->RemoveFromRootSet();
+  }
+  tmp->mJSVal = JS::NullValue();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 // static
