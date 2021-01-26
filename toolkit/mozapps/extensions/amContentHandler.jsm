@@ -7,7 +7,17 @@
 const XPI_CONTENT_TYPE = "application/x-xpinstall";
 const MSG_INSTALL_ADDON = "WebInstallerInstallAddonFromWebpage";
 
+var { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  StoreHandler: "resource://gre/modules/amStoreHandler.jsm"
+});
 
 function amContentHandler() {}
 
@@ -22,32 +32,40 @@ amContentHandler.prototype = {
    * @param  aRequest
    *         The nsIRequest dealing with the content
    */
-  handleContent(aMimetype, aContext, aRequest) {
-    if (aMimetype != XPI_CONTENT_TYPE) {
-      throw Cr.NS_ERROR_WONT_HANDLE_CONTENT;
-    }
-
-    if (!(aRequest instanceof Ci.nsIChannel)) {
-      throw Cr.NS_ERROR_WONT_HANDLE_CONTENT;
-    }
-
+  async handleContent(aMimetype, aContext, aRequest) {
     let uri = aRequest.URI;
-
-    let window = null;
-    let callbacks = aRequest.notificationCallbacks
-      ? aRequest.notificationCallbacks
-      : aRequest.loadGroup.notificationCallbacks;
-    if (callbacks) {
-      window = callbacks.getInterface(Ci.nsIDOMWindow);
+    let { loadInfo } = aRequest;
+    const { triggeringPrincipal } = loadInfo;
+    if (aMimetype == "application/x-chrome-extension") {
+      let confirmInstall = Services.prompt.confirm(
+        null,
+        "Web Extension Install Request",
+        "This website is attempting to install a web extension. If you trust this website please click \"OK\", else click \"Cancel\".",
+        );
+      if (!confirmInstall) {return;} //don't want to install if permission not given
+      // Define tmp paths
+      let xpiPath = OS.Path.join(OS.Constants.Path.profileDir, "extensions", "tmp", "extension.xpi");
+      let manifestPath = OS.Path.join(OS.Constants.Path.profileDir, "extensions", "tmp", "new_manifest.json");
+      // Define nsiFiles
+      let nsiFileXpi = StoreHandler.getNsiFile(xpiPath);
+      let nsiManifest = StoreHandler.getNsiFile(manifestPath);
+      // get channel
+      let channel = StoreHandler.getChannel({uri: uri.spec, loadUsingSystemPrincipal: true});
+      // attempt install
+      StoreHandler.attemptInstall(channel, xpiPath, manifestPath, nsiFileXpi, nsiManifest);
+      return; // don't want any of the rest of the ContentHandler to execute
+    } else if (aMimetype != XPI_CONTENT_TYPE) {
+      throw Components.Exception("", Cr.NS_ERROR_WONT_HANDLE_CONTENT);
     }
-
+    if (!(aRequest instanceof Ci.nsIChannel)) {
+      throw Components.Exception("", Cr.NS_ERROR_WONT_HANDLE_CONTENT);
+    }
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
-    const { triggeringPrincipal } = aRequest.loadInfo;
+    let browsingContext = loadInfo.targetBrowsingContext;
 
     let sourceHost;
     let sourceURL;
-
     try {
       sourceURL = triggeringPrincipal.URI.spec;
       sourceHost = triggeringPrincipal.URI.host;
@@ -67,35 +85,10 @@ amContentHandler.prototype = {
       method: "link",
       sourceHost,
       sourceURL,
+      browsingContext,
     };
 
-    if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-      // When running in the main process this might be a frame inside an
-      // in-content UI page, walk up to find the first frame element in a chrome
-      // privileged document
-      let element = window.frameElement;
-      while (
-        element &&
-        !element.ownerDocument.nodePrincipal.isSystemPrincipal
-      ) {
-        element = element.ownerGlobal.frameElement;
-      }
-
-      if (element) {
-        let listener = Cc["@mozilla.org/addons/integration;1"].getService();
-        listener.wrappedJSObject.receiveMessage({
-          name: MSG_INSTALL_ADDON,
-          target: element,
-          data: install,
-        });
-        return;
-      }
-    }
-
-    // Fall back to sending through the message manager
-    let messageManager = window.docShell.messageManager;
-
-    messageManager.sendAsyncMessage(MSG_INSTALL_ADDON, install);
+    Services.cpmm.sendAsyncMessage(MSG_INSTALL_ADDON, install);
   },
 
   classID: Components.ID("{7beb3ba8-6ec3-41b4-b67c-da89b8518922}"),

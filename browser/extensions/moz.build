@@ -8,4 +8,8 @@ DIRS += [
     'formautofill',
     'pdfjs',
     'screenshots',
+    'webcompat',
+    'report-site-issue',
+    'addon-stores'
 ]
+

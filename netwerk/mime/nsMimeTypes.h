@@ -23,6 +23,7 @@
 #define APPLICATION_APPLEFILE "application/applefile"
 #define APPLICATION_BINHEX "application/mac-binhex40"
 #define APPLICATION_MACBINARY "application/x-macbinary"
+#define APPLICATION_CHROME_EXTENSION "application/x-chrome-extension"
 #define APPLICATION_COMPRESS "application/x-compress"
 #define APPLICATION_COMPRESS2 "application/compress"
 #define APPLICATION_FORTEZZA_CKL "application/x-fortezza-ckl"
@@ -119,6 +120,7 @@
 #define IMAGE_JNG "image/x-jng"
 #define IMAGE_SVG_XML "image/svg+xml"
 #define IMAGE_WEBP "image/webp"
+#define IMAGE_AVIF "image/avif"
 
 #define MESSAGE_EXTERNAL_BODY "message/external-body"
 #define MESSAGE_NEWS "message/news"
@@ -151,7 +153,6 @@
 #define TEXT_XML "text/xml"
 #define TEXT_RDF "text/rdf"
 #define TEXT_VTT "text/vtt"
-#define TEXT_XUL "application/vnd.mozilla.xul+xml"
 #define TEXT_ECMASCRIPT "text/ecmascript"
 #define TEXT_JAVASCRIPT "text/javascript"
 #define TEXT_XSL "text/xsl"
@@ -231,6 +232,5 @@
 
 #define APPLICATION_DIRECTORY \
   "application/directory" /* text/x-vcard is synonym */
-#define APPLICATION_CACHED_XUL "mozilla.application/cached-xul"
 
 #endif /* nsMimeTypes_h_ */
