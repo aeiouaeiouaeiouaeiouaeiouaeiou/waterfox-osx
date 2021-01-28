@@ -31,7 +31,7 @@ pref("extensions.logging.enabled", false);
 pref("extensions.strictCompatibility", false);
 
 // Disable compatibility checking due to mish-mash of versions.
-pref("extensions.checkCompatibility.56.3", false);
+pref("extensions.checkCompatibility.56.4", false);
 
 // Specifies a minimum maxVersion an addon needs to say it's compatible with
 // for it to be compatible by default.
@@ -1346,7 +1346,12 @@ pref("plain_text.wrap_long_lines", true);
 // before content.
 pref("dom.debug.propagate_gesture_events_through_content", false);
 
+// The request URL of the GeoLocation backend.
+#ifdef RELEASE_OR_BETA
+pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
+#else
 pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
+#endif
 
 #ifdef XP_MACOSX
 sticky_pref("geo.provider.use_corelocation", true);
