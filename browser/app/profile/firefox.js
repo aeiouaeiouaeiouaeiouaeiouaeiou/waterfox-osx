@@ -418,10 +418,6 @@ pref("browser.search.hiddenOneOffs", "");
 // position and attributes of the search-container element in browser.xul.
 pref("browser.search.widget.inNavBar", true);
 
-#ifndef RELEASE_OR_BETA
-pref("browser.search.reset.enabled", true);
-#endif
-
 pref("browser.sessionhistory.max_entries", 50);
 
 // Built-in default permissions.
@@ -1347,11 +1343,7 @@ pref("plain_text.wrap_long_lines", true);
 pref("dom.debug.propagate_gesture_events_through_content", false);
 
 // The request URL of the GeoLocation backend.
-#ifdef RELEASE_OR_BETA
-pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
-#else
 pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
-#endif
 
 #ifdef XP_MACOSX
 sticky_pref("geo.provider.use_corelocation", true);
