@@ -44,6 +44,7 @@ else
 	mk_add_options MOZ_MAKE_FLAGS=-j${X}
 fi
 
+ac_add_options "MOZ_ALLOW_LEGACY_EXTENSIONS=1"
 ac_add_options --disable-debug
 ac_add_options --disable-dmd
 ac_add_options --disable-crashreporter
@@ -54,6 +55,7 @@ ac_add_options --disable-updater
 ac_add_options --disable-verify-mar
 
 ac_add_options --enable-application=browser
+ac_add_options --enable-proxy-bypass-protection
 ac_add_options --enable-rust-simd
 ac_add_options --enable-ccache=ccache
 
