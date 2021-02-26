@@ -111,7 +111,7 @@ public:
         EXT_device_base,
         EXT_device_query,
         NV_stream_consumer_gltexture_yuv,
-        ANGLE_stream_producer_d3d_texture_nv12,
+        ANGLE_stream_producer_d3d_texture,
         Extensions_Max
     };
 
@@ -299,6 +299,9 @@ public:
         WRAP(   fQueryStreamKHR(dpy, stream, attribute, value) )
 
     // KHR_stream_consumer_gltexture
+    EGLBoolean  fStreamConsumerGLTextureExternalKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+        WRAP(   fStreamConsumerGLTextureExternalKHR(dpy, stream) )
+
     EGLBoolean  fStreamConsumerAcquireKHR(EGLDisplay dpy, EGLStreamKHR stream) const
         WRAP(   fStreamConsumerAcquireKHR(dpy, stream) )
 
@@ -317,18 +320,12 @@ public:
     EGLBoolean  fStreamConsumerGLTextureExternalAttribsNV(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const
         WRAP(   fStreamConsumerGLTextureExternalAttribsNV(dpy, stream, attrib_list) )
 
-    // ANGLE_stream_producer_d3d_texture_nv12
-    EGLBoolean  fCreateStreamProducerD3DTextureNV12ANGLE(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const
-        WRAP(   fCreateStreamProducerD3DTextureNV12ANGLE(dpy, stream, attrib_list) )
+    // ANGLE_stream_producer_d3d_texture
+    EGLBoolean  fCreateStreamProducerD3DTextureANGLE(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const
+        WRAP(   fCreateStreamProducerD3DTextureANGLE(dpy, stream, attrib_list) )
 
-    EGLBoolean  fStreamPostD3DTextureNV12ANGLE(EGLDisplay dpy, EGLStreamKHR stream, void* texture, const EGLAttrib* attrib_list) const
-        WRAP(   fStreamPostD3DTextureNV12ANGLE(dpy, stream, texture, attrib_list) )
-
-    void           fANGLEPlatformInitialize(angle::Platform* platform) const
-        VOID_WRAP( fANGLEPlatformInitialize(platform) )
-
-    void fANGLEPlatformShutdown() const
-        VOID_WRAP( fANGLEPlatformShutdown() )
+    EGLBoolean  fStreamPostD3DTextureANGLE(EGLDisplay dpy, EGLStreamKHR stream, void* texture, const EGLAttrib* attrib_list) const
+        WRAP(   fStreamPostD3DTextureANGLE(dpy, stream, texture, attrib_list) )
 
 #undef WRAP
 #undef VOID_WRAP
@@ -460,6 +457,8 @@ private:
                                                   EGLenum attribute,
                                                   EGLint* value);
         // KHR_stream_consumer_gltexture
+        EGLBoolean (GLAPIENTRY * fStreamConsumerGLTextureExternalKHR)(EGLDisplay dpy,
+                                                                      EGLStreamKHR stream);
         EGLBoolean (GLAPIENTRY * fStreamConsumerAcquireKHR)(EGLDisplay dpy,
                                                             EGLStreamKHR stream);
         EGLBoolean (GLAPIENTRY * fStreamConsumerReleaseKHR)(EGLDisplay dpy,
@@ -477,15 +476,13 @@ private:
                                                                             EGLStreamKHR stream,
                                                                             const EGLAttrib* attrib_list);
         // ANGLE_stream_producer_d3d_texture_nv12
-        EGLBoolean (GLAPIENTRY * fCreateStreamProducerD3DTextureNV12ANGLE)(EGLDisplay dpy,
+        EGLBoolean (GLAPIENTRY * fCreateStreamProducerD3DTextureANGLE)(EGLDisplay dpy,
                                                                            EGLStreamKHR stream,
                                                                            const EGLAttrib* attrib_list);
-        EGLBoolean (GLAPIENTRY * fStreamPostD3DTextureNV12ANGLE)(EGLDisplay dpy,
+        EGLBoolean (GLAPIENTRY * fStreamPostD3DTextureANGLE)(EGLDisplay dpy,
                                                                  EGLStreamKHR stream,
                                                                  void* texture,
                                                                  const EGLAttrib* attrib_list);
-        void       (GLAPIENTRY * fANGLEPlatformInitialize)(angle::Platform* platform);
-        void       (GLAPIENTRY * fANGLEPlatformShutdown)();
     } mSymbols;
 
 public:

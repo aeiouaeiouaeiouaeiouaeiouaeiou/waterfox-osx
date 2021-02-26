@@ -6,7 +6,7 @@
 #include "WebGLContext.h"
 
 #include <algorithm>
-#include "angle/ShaderLang.h"
+#include "GLSLANG/ShaderLang.h"
 #include "CanvasUtils.h"
 #include "gfxPrefs.h"
 #include "GLContext.h"
@@ -602,7 +602,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mBypassShaderValidation = gfxPrefs::WebGLBypassShaderValidator();
 
     // initialize shader translator
-    if (!ShInitialize()) {
+    if (!sh::Initialize()) {
         *out_failReason = { "FEATURE_FAILURE_WEBGL_GLSL",
                             "GLSL translator initialization failed!" };
         return false;
@@ -629,6 +629,12 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
         !InitWebGL2(out_failReason))
     {
         // Todo: Bug 898404: Only allow WebGL2 on GL>=3.0 on desktop GL.
+        return false;
+    }
+
+    if (!gl->IsSupported(GLFeature::vertex_array_object)) {
+        *out_failReason = { "FEATURE_FAILURE_WEBGL_VAOS",
+                            "Requires vertex_array_object." };
         return false;
     }
 
