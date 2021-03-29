@@ -837,7 +837,9 @@ SearchService.prototype = {
     return val;
   },
 
-  _listJSONURL: SearchUtils.distroID ? EXT_SEARCH_PREFIX + "list-dist.json" : `${EXT_SEARCH_PREFIX}list.json`,
+  _listJSONURL: `${EXT_SEARCH_PREFIX}list.json`,
+  // Temporarily disable the below as it affects existing partner builds.
+  // _listJSONURL: SearchUtils.distroID ? EXT_SEARCH_PREFIX + "list-dist.json" : `${EXT_SEARCH_PREFIX}list.json`,
 
   get _sortedEngines() {
     if (!this.__sortedEngines) {
@@ -1615,6 +1617,19 @@ SearchService.prototype = {
       SearchUtils.log("_addEngineToStore: Duplicate engine found, aborting!");
       return;
     }
+
+    const ptag = Services.prefs.getCharPref("browser.search.ptag", "SYS1000012");
+    if (engine.name == "Bing" && ptag != "SYS1000012") {
+      const regex = /(.*PTAG=)/g;
+      const searchURL = engine.__searchForm.match(regex)[0];
+      engine.__searchForm = searchURL + ptag;
+      engine._urls[0].params[7] = {
+        name: engine._urls[0].params[7].name,
+        value: ptag,
+        purpose: undefined
+      }
+    }
+
 
     if (engine._engineToUpdate) {
       // We need to replace engineToUpdate with the engine that just loaded.
