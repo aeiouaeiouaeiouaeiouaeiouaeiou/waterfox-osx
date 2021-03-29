@@ -22,7 +22,7 @@ if CONFIG['MOZ_ASAN']:
     ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    DEFFILE = 'mozglue.def'
+    DEFFILE = '!mozglue.def'
     # We'll break the DLL blocklist if we immediately load user32.dll
     DELAYLOAD_DLLS += [
         'user32.dll',
@@ -97,5 +97,8 @@ if CONFIG['OS_TARGET'] == 'Darwin':
     # because somehow clang doesn't want to accept the __thread keyword
     # for TLS.
     LDFLAGS += ['-Wl,-bind_at_load']
+
+if CONFIG['MOZ_LINKER'] and CONFIG['TARGET_CPU'] == 'arm':
+    LDFLAGS += ['-Wl,-version-script,%s/arm-eabi-filter' % SRCDIR]
 
 DIST_INSTALL = True

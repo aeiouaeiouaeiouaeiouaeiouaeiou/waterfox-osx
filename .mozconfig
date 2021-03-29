@@ -2,7 +2,8 @@
 
 # macOS Specific Options
 if test `uname -s` = Darwin; then
-ac_add_options --enable-optimize="-O3 -march=core2 -mtune=core2 -w"
+export MAKE=gmake
+ac_add_options --enable-optimize="-O3 -march=core2 -w"
 ac_add_options --enable-macos-target=10.7
 ac_add_options --with-macos-sdk=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
 # Windows 10 Specific Options
@@ -57,11 +58,10 @@ ac_add_options --disable-updater
 ac_add_options --disable-verify-mar
 
 ac_add_options --enable-application=browser
-ac_add_options --enable-av1
 ac_add_options --enable-ccache=ccache
 ac_add_options --enable-eme=widevine
 ac_add_options --enable-release
-ac_add_options --enable-rust-simd # on x86 requires SSE2
+ac_add_options --enable-rust-simd
 ac_add_options --enable-update-channel=release
 
 ac_add_options --with-app-name=waterfox

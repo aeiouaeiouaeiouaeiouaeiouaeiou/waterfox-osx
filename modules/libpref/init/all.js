@@ -402,7 +402,19 @@ pref("media.libavcodec.allow-obsolete", false);
 pref("media.ffvpx.enabled", true);
 #endif
 #ifdef MOZ_AV1
+#if defined(XP_WIN) && !defined(_ARM64_)
 pref("media.av1.enabled", true);
+pref("media.av1.use-dav1d", true);
+#elif defined(XP_MACOSX)
+pref("media.av1.enabled", true);
+pref("media.av1.use-dav1d", true);
+#elif defined(XP_UNIX) && !defined(MOZ_WIDGET_ANDROID)
+pref("media.av1.enabled", true);
+pref("media.av1.use-dav1d", true);
+#else
+pref("media.av1.enabled", false);
+pref("media.av1.use-dav1d", false);
+#endif
 #endif
 #if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
 pref("media.ffmpeg.low-latency.enabled", false);
@@ -2968,9 +2980,6 @@ pref("layout.css.all-shorthand.enabled", true);
 // Is support for CSS overflow-clip-box enabled for non-UA sheets?
 pref("layout.css.overflow-clip-box.enabled", false);
 
-// Is support for CSS grid enabled?
-pref("layout.css.grid.enabled", true);
-
 // Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
 pref("layout.css.grid-template-subgrid-value.enabled", false);
 
@@ -5083,11 +5092,7 @@ pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
 // W3C draft pointer events
-#if !defined(ANDROID) && defined(NIGHTLY_BUILD)
 pref("dom.w3c_pointer_events.enabled", true);
-#else
-pref("dom.w3c_pointer_events.enabled", false);
-#endif
 
 // Control firing WidgetMouseEvent by handling Windows pointer messages or mouse
 // messages.
