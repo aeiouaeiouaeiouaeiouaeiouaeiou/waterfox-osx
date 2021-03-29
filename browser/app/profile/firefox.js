@@ -2399,7 +2399,11 @@ pref("first-startup.timeout", 30000);
 #endif
 
 // Set pref for auto changing theme
-pref("browser.theme.auto", false);
+pref("browser.theme.auto", true);
+
+#ifdef XP_MACOSX
+  pref("ui.systemUsesDarkTheme", 1);
+#endif
 
 // Set bool pref for restart browser purgecache enabled.
 pref("browser.restart_menu.purgecache", false);
