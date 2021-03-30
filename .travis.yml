@@ -26,3 +26,4 @@ before_script:
 
 script:
 - ./mach build
+- ./mach package
