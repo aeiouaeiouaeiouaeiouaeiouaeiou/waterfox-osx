@@ -15,9 +15,13 @@ before_install:
 - export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 
 before_script:
-- sudo port -N install autoconf213 ccache gmake gnutar pkgconfig yasm
+- sudo port -N install autoconf213 ccache gmake gnutar clang-11 pkgconfig nasm yasm
+- sudo port select --set clang mp-clang-11
+- sudo port select --set llvm mp-llvm-11
+- export LLVM_CONFIG=/opt/local/bin/llvm-config
 - curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 
 script:
-- ./mach build && ./mach package
+- ./mach build
+- ./mach package
