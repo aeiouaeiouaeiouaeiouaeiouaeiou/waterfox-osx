@@ -10,7 +10,8 @@
   "addons.mozilla.org": "Mozilla/5.0 (%OS_SLICE% rv:57.0) Gecko/20100101 Firefox/57.0",
   "studio.youtube.com": "Mozilla/5.0 (%OS_SLICE% rv:68.0) Gecko/20100101 Firefox/60.0",
   "netflix.com": "Mozilla/5.0 (%OS_SLICE% rv:68.0) Gecko/20100101 Firefox/68.0",
-  "internet.xfinity.com": "Mozilla/5.0 (%OS_SLICE% rv:68.0) Gecko/20100101 Firefox/68.0",
+  "internet.xfinity.com": "Mozilla/5.0 (%OS_SLICE% rv:78.0) Gecko/20100101 Firefox/78.0",
+  "xfinity.com": "Mozilla/5.0 (%OS_SLICE% rv:78.0) Gecko/20100101 Firefox/78.0",
   "chase.com": "Mozilla/5.0 (%OS_SLICE% rv:68.0) Gecko/20100101 Firefox/68.0",
   "web.whatsapp.com": "Mozilla/5.0 (%OS_SLICE% rv:68.0) Gecko/20100101 Firefox/68.0",
   "spotify.com": "Mozilla/5.0 (%OS_SLICE% rv:68.0) Gecko/20100101 Firefox/68.0",
@@ -41,5 +42,8 @@
   "answers.unrealengine.com": "Mozilla/5.0 (%OS_SLICE% rv:60.0) Gecko/20100101 Firefox/60.0",
   "cdn.polyfill.io": "Mozilla/5.0 (%OS_SLICE% rv:56.0) Gecko/20100101 Firefox/56.0",
   "swedbank.se": "Mozilla/5.0 (%OS_SLICE% rv:68.0) Gecko/20100101 Firefox/68.0",
-  "yahoo.com": "Mozilla/5.0 (%OS_SLICE% rv:99.9) Gecko/20100101 Firefox/99.9"
+  "yahoo.com": "Mozilla/5.0 (%OS_SLICE% rv:99.9) Gecko/20100101 Firefox/99.9",
+  "sakugabooru.com": "Mozilla/5.0 (%OS_SLICE% rv:99.0) Gecko/20100101 Firefox/99.0",
+  "securityboulevard.com": "Mozilla/5.0 (%OS_SLICE% rv:99.0) Gecko/20100101 Firefox/99.0",
+  "kb.vmware.com": "Mozilla/5.0 (%OS_SLICE% Trident/7.0; rv:11.0) like Gecko"
 }
