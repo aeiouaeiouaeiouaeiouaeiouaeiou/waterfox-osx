@@ -802,6 +802,7 @@ const KTableEntry nsCSSProps::kAppearanceKTable[] = {
   { eCSSKeyword_scrollbartrack_vertical,      NS_THEME_SCROLLBARTRACK_VERTICAL },
   { eCSSKeyword_scrollbarthumb_horizontal,    NS_THEME_SCROLLBARTHUMB_HORIZONTAL },
   { eCSSKeyword_scrollbarthumb_vertical,      NS_THEME_SCROLLBARTHUMB_VERTICAL },
+  { eCSSKeyword_scrollcorner,           NS_THEME_SCROLLCORNER },
   { eCSSKeyword_textfield,              NS_THEME_TEXTFIELD },
   { eCSSKeyword_textfield_multiline,    NS_THEME_TEXTFIELD_MULTILINE },
   { eCSSKeyword_caret,                  NS_THEME_CARET },
@@ -1957,6 +1958,12 @@ const KTableEntry nsCSSProps::kScrollSnapTypeKTable[] = {
   { eCSSKeyword_UNKNOWN,   -1 }
 };
 
+const KTableEntry nsCSSProps::kScrollbarWidthKTable[] = {
+  { eCSSKeyword_auto, StyleScrollbarWidth::Auto },
+  { eCSSKeyword_thin, StyleScrollbarWidth::Thin },
+  { eCSSKeyword_none, StyleScrollbarWidth::None }
+};
+
 const KTableEntry nsCSSProps::kStackSizingKTable[] = {
   { eCSSKeyword_ignore, StyleStackSizing::Ignore },
   { eCSSKeyword_stretch_to_fit, StyleStackSizing::StretchToFit },
@@ -2342,8 +2349,11 @@ const KTableEntry nsCSSProps::kFilterFunctionKTable[] = {
 
 const KTableEntry nsCSSProps::kImageRenderingKTable[] = {
   { eCSSKeyword_auto, NS_STYLE_IMAGE_RENDERING_AUTO },
+  { eCSSKeyword_high_quality, NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY },
   { eCSSKeyword_optimizespeed, NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED },
   { eCSSKeyword_optimizequality, NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY },
+  { eCSSKeyword_pixelated, NS_STYLE_IMAGE_RENDERING_CRISPEDGES },
+  { eCSSKeyword_smooth, NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED },
   { eCSSKeyword__moz_crisp_edges, NS_STYLE_IMAGE_RENDERING_CRISPEDGES },
   { eCSSKeyword_UNKNOWN, -1 }
 };
