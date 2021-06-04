@@ -16,13 +16,16 @@ before_install:
 - export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 
 before_script:
-- sudo port -N install autoconf213 ccache gmake gnutar clang-11 pkgconfig nodejs14 nasm yasm
+- sudo port -N install autoconf213 ccache gmake gnutar clang-11 pkgconfig python38 nodejs14 nasm yasm
 - sudo port select --set clang mp-clang-11
 - sudo port select --set llvm mp-llvm-11
+- sudo port select --set python3 python38
 - export LLVM_CONFIG=/opt/local/bin/llvm-config
-- curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable-x86_64-apple-darwin
+- curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable-x86_64-apple-darwin
 - export PATH=$PATH:~/.cargo/bin
 - cargo install cbindgen
 
 script:
 - ./mach build
+- ./mach package
+- ./mach package-multi-locale --locales en-US en-GB zh-CN zh-TW ja ko ru fr es-ES es-MX pt-PT pt-BR de pl nl da nn-NO sv-SE el it cs hu lt th id vi ar
