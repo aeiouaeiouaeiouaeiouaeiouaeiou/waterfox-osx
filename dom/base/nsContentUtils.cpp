@@ -302,6 +302,7 @@ bool nsContentUtils::sSendPerformanceTimingNotifications = false;
 bool nsContentUtils::sUseActivityCursor = false;
 bool nsContentUtils::sAnimationsAPICoreEnabled = false;
 bool nsContentUtils::sAnimationsAPIElementAnimateEnabled = false;
+bool nsContentUtils::sAnimationsAPIPendingMemberEnabled = false;
 bool nsContentUtils::sGetBoxQuadsEnabled = false;
 bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
 bool nsContentUtils::sRequestIdleCallbackEnabled = false;
@@ -748,6 +749,10 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sAnimationsAPIElementAnimateEnabled,
                                "dom.animations-api.element-animate.enabled", false);
+
+  Preferences::AddBoolVarCache(&sAnimationsAPIPendingMemberEnabled,
+                               "dom.animations-api.pending-member.enabled",
+                               false);
 
   Preferences::AddBoolVarCache(&sGetBoxQuadsEnabled,
                                "layout.css.getBoxQuads.enabled", false);
@@ -10897,18 +10902,4 @@ nsContentUtils::ExtractErrorValues(JSContext* aCx,
       JS_ClearPendingException(aCx);
     }
   }
-}
-
-/* static */ uint32_t
-nsContentUtils::GetNodeDepth(nsINode* aNode)
-{
-  uint32_t depth = 1;
-
-  MOZ_ASSERT(aNode, "Node shouldn't be null");
-
-  while ((aNode = aNode->GetParentNode())) {
-    ++depth;
-  }
-
-  return depth;
 }

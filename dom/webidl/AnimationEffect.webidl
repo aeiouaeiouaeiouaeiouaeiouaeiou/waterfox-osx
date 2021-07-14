@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://w3c.github.io/web-animations/#animationeffectreadonly
+ * https://drafts.csswg.org/web-animations/#animationeffectreadonly
  *
  * Copyright © 2015 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -25,7 +25,7 @@ enum PlaybackDirection {
   "alternate-reverse"
 };
 
-dictionary AnimationEffectTimingProperties {
+dictionary EffectTiming {
   double                              delay = 0.0;
   double                              endDelay = 0.0;
   FillMode                            fill = "auto";
@@ -36,7 +36,18 @@ dictionary AnimationEffectTimingProperties {
   DOMString                           easing = "linear";
 };
 
-dictionary ComputedTimingProperties : AnimationEffectTimingProperties {
+dictionary OptionalEffectTiming {
+  double                              delay;
+  double                              endDelay;
+  FillMode                            fill;
+  double                              iterationStart;
+  unrestricted double                 iterations;
+  (unrestricted double or DOMString)  duration;
+  PlaybackDirection                   direction;
+  DOMString                           easing;
+};
+
+dictionary ComputedEffectTiming : EffectTiming {
   unrestricted double   endTime = 0.0;
   unrestricted double   activeDuration = 0.0;
   double?               localTime = null;
@@ -45,9 +56,10 @@ dictionary ComputedTimingProperties : AnimationEffectTimingProperties {
 };
 
 [Func="nsDocument::IsWebAnimationsEnabled"]
-interface AnimationEffectReadOnly {
-  [Cached, Constant]
-  readonly attribute AnimationEffectTimingReadOnly timing;
+interface AnimationEffect {
+  EffectTiming getTiming();
   [BinaryName="getComputedTimingAsDict"]
-  ComputedTimingProperties getComputedTiming();
+  ComputedEffectTiming getComputedTiming();
+  [Throws]
+  void updateTiming(optional OptionalEffectTiming timing);
 };

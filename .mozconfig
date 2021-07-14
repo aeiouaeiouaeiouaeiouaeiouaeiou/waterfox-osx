@@ -1,11 +1,13 @@
 # Very simplified mozconfig because builds are made in native OS X environment
 
 export MAKE=gmake
+export STRIP=strip
 X=$(getconf NPROCESSORS_ONLN 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
 mk_add_options MOZ_MAKE_FLAGS=-j${X}
+ac_add_options --target=x86_64-apple-darwin
 ac_add_options --enable-optimize="-O3 -march=core2 -w"
 ac_add_options --enable-macos-target=10.7
-ac_add_options --with-macos-sdk=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
+ac_add_options --with-macos-sdk=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk
 ac_add_options --disable-crashreporter
 ac_add_options --disable-js-shell
 ac_add_options --disable-maintenance-service

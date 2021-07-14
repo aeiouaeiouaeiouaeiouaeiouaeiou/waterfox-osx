@@ -2315,6 +2315,15 @@ public:
   }
 
   /**
+   * Returns true if the DOM Animations API should report a pending animation
+   * using the separate 'pending' member instead of the 'playState' member.
+   */
+  static bool AnimationsAPIPendingMemberEnabled()
+  {
+    return sAnimationsAPIPendingMemberEnabled;
+  }
+
+  /**
    * Returns true if the getBoxQuads API should be enabled.
    */
   static bool GetBoxQuadsEnabled()
@@ -3139,14 +3148,6 @@ public:
    */
   static bool GetSourceMapURL(nsIHttpChannel* aChannel, nsACString& aResult);
 
-  /**
-   * Returns the length of the parent-traversal path (in terms of the number of
-   * nodes) to an unparented/root node from aNode. An unparented/root node is
-   * considered to have a depth of 1, its children have a depth of 2, etc.
-   * aNode is expected to be non-null.
-   */
-  static uint32_t GetNodeDepth(nsINode* aNode);
-
 private:
   static bool InitializeEventTable();
 
@@ -3287,6 +3288,7 @@ private:
   static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;
   static bool sAnimationsAPIElementAnimateEnabled;
+  static bool sAnimationsAPIPendingMemberEnabled;
   static bool sGetBoxQuadsEnabled;
   static bool sSkipCursorMoveForSameValueSet;
   static bool sRequestIdleCallbackEnabled;
