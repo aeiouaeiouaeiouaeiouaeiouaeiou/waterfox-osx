@@ -10,6 +10,7 @@ DIRS += [
     'screenshots',
     'webcompat',
     'report-site-issue',
-    'addon-stores'
+    'addon-stores',
+    'extensibles'
 ]
 
