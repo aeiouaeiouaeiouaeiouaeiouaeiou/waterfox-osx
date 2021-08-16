@@ -102,7 +102,7 @@ class js::VerifyPreTracer final : public JS::CallbackTracer
     NodeMap nodemap;
 
     explicit VerifyPreTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt), noggc(TlsContext.get()), number(rt->gc.gcNumber()),
+      : JS::CallbackTracer(rt), noggc(rt->mainContextFromOwnThread()), number(rt->gc.gcNumber()),
         count(0), curnode(nullptr), root(nullptr), edgeptr(nullptr), term(nullptr)
     {}
 
@@ -181,9 +181,8 @@ gc::GCRuntime::startVerifyPreBarriers()
         return;
 
     if (IsIncrementalGCUnsafe(rt) != AbortReason::None ||
-        TlsContext.get()->keepAtoms ||
-        rt->hasHelperThreadZones() ||
-        rt->cooperatingContexts().length() != 1)
+        rt->mainContextFromOwnThread()->keepAtoms ||
+        rt->hasHelperThreadZones())
     {
         return;
     }
@@ -194,7 +193,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (!trc)
         return;
 
-    AutoPrepareForTracing prep(TlsContext.get(), WithAtoms);
+    AutoPrepareForTracing prep(rt->mainContextFromOwnThread(), WithAtoms);
 
     for (auto chunk = allNonEmptyChunks(); !chunk.done(); chunk.next())
         chunk->bitmap.clear();
@@ -331,7 +330,7 @@ gc::GCRuntime::endVerifyPreBarriers()
 
     MOZ_ASSERT(!JS::IsGenerationalGCEnabled(rt));
 
-    AutoPrepareForTracing prep(rt->activeContextFromOwnThread(), SkipAtoms);
+    AutoPrepareForTracing prep(rt->mainContextFromOwnThread(), SkipAtoms);
 
     bool compartmentCreated = false;
 
@@ -355,7 +354,7 @@ gc::GCRuntime::endVerifyPreBarriers()
 
     if (!compartmentCreated &&
         IsIncrementalGCUnsafe(rt) == AbortReason::None &&
-        !TlsContext.get()->keepAtoms &&
+        !rt->mainContextFromOwnThread()->keepAtoms &&
         !rt->hasHelperThreadZones())
     {
         CheckEdgeTracer cetrc(rt);
@@ -416,7 +415,7 @@ gc::GCRuntime::maybeVerifyPreBarriers(bool always)
     if (!hasZealMode(ZealMode::VerifierPre))
         return;
 
-    if (TlsContext.get()->suppressGC)
+    if (rt->mainContextFromOwnThread()->suppressGC)
         return;
 
     if (verifyPreData) {
@@ -525,7 +524,7 @@ HeapCheckTracerBase::onChild(const JS::GCCellPtr& thing)
 
     // Don't trace into GC in zones being used by helper threads.
     Zone* zone = thing.is<JSObject>() ? thing.as<JSObject>().zone() : cell->asTenured().zone();
-    if (zone->group() && zone->group()->usedByHelperThread())
+    if (zone->usedByHelperThread())
         return;
 
     WorkItem item(thing, contextName(), parentIndex);

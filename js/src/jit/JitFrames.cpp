@@ -1005,7 +1005,7 @@ UpdateIonJSFrameForMinorGC(JSTracer* trc, const JSJitFrameIter& frame)
         ionScript = frame.ionScriptFromCalleeToken();
     }
 
-    Nursery& nursery = ionScript->method()->zone()->group()->nursery();
+    Nursery& nursery = trc->runtime()->gc.nursery();
 
     const SafepointIndex* si = ionScript->getSafepointIndex(frame.returnAddressToFp());
     SafepointReader safepoint(ionScript, si);
@@ -1325,9 +1325,9 @@ TraceWasmActivation(JSTracer* trc, WasmActivation* act)
 }
 
 void
-TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
+TraceJitActivations(JSContext* cx, JSTracer* trc)
 {
-    for (ActivationIterator activations(cx, target); !activations.done(); ++activations) {
+    for (ActivationIterator activations(cx); !activations.done(); ++activations) {
         if (activations->isJit())
             TraceJitActivation(trc, activations->asJit());
         if (activations->isWasm())
@@ -1339,13 +1339,11 @@ void
 UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc)
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
-    JSContext* cx = TlsContext.get();
-    for (const CooperatingContext& target : rt->cooperatingContexts()) {
-        for (JitActivationIterator activations(cx, target); !activations.done(); ++activations) {
-            for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter) {
-                if (iter.frame().type() == JitFrame_IonJS)
-                    UpdateIonJSFrameForMinorGC(trc, iter.frame());
-            }
+    JSContext* cx = rt->mainContextFromOwnThread();
+    for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
+        for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter) {
+            if (iter.frame().type() == JitFrame_IonJS)
+                UpdateIonJSFrameForMinorGC(trc, iter.frame());
         }
     }
 }

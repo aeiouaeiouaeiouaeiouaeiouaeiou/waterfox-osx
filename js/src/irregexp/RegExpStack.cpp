@@ -44,10 +44,10 @@ RegExpStackScope::~RegExpStackScope()
     regexp_stack->reset();
 }
 
-int
+bool
 irregexp::GrowBacktrackStack(JSRuntime* rt)
 {
-    return TlsContext.get()->regexpStack.ref().grow();
+    return rt->mainContextFromOwnThread()->regexpStack.ref().grow();
 }
 
 RegExpStack::RegExpStack()

@@ -675,8 +675,8 @@ void
 ConstraintTypeSet::postWriteBarrier(JSContext* cx, Type type)
 {
     if (type.isSingletonUnchecked() && IsInsideNursery(type.singletonNoBarrier())) {
-        cx->zone()->group()->storeBuffer().putGeneric(TypeSetRef(cx->zone(), this));
-        cx->zone()->group()->storeBuffer().setShouldCancelIonCompilations();
+        cx->runtime()->gc.storeBuffer().putGeneric(TypeSetRef(cx->zone(), this));
+        cx->runtime()->gc.storeBuffer().setShouldCancelIonCompilations();
     }
 }
 
@@ -1002,14 +1002,14 @@ TypeSet::intersectSets(TemporaryTypeSet* a, TemporaryTypeSet* b, LifoAlloc* allo
 // Constraints generated during Ion compilation capture assumptions made about
 // heap properties that will trigger invalidation of the resulting Ion code if
 // the constraint is violated. Constraints can only be attached to type sets on
-// the active thread, so to allow compilation to occur almost entirely off thread
+// the main thread, so to allow compilation to occur almost entirely off thread
 // the generation is split into two phases.
 //
 // During compilation, CompilerConstraint values are constructed in a list,
 // recording the heap property type set which was read from and its expected
 // contents, along with the assumption made about those contents.
 //
-// At the end of compilation, when linking the result on the active thread, the
+// At the end of compilation, when linking the result on the main thread, the
 // list of compiler constraints are read and converted to type constraints and
 // attached to the type sets. If the property type sets have changed so that the
 // assumptions no longer hold then the compilation is aborted and its result
@@ -1025,7 +1025,7 @@ class CompilerConstraint
 
     // Contents of the property at the point when the query was performed. This
     // may differ from the actual property types later in compilation as the
-    // active thread performs side effects.
+    // main thread performs side effects.
     TemporaryTypeSet* expected;
 
     CompilerConstraint(LifoAlloc* alloc, const HeapTypeSetKey& property)
@@ -1290,7 +1290,7 @@ TypeSet::ObjectKey::ensureTrackedProperty(JSContext* cx, jsid id)
 {
     // If we are accessing a lazily defined property which actually exists in
     // the VM and has not been instantiated yet, instantiate it now if we are
-    // on the active thread and able to do so.
+    // on the main thread and able to do so.
     if (!JSID_IS_VOID(id) && !JSID_IS_EMPTY(id)) {
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
         if (isSingleton()) {
@@ -1511,7 +1511,7 @@ js::FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList
 static void
 CheckDefinitePropertiesTypeSet(JSContext* cx, TemporaryTypeSet* frozen, StackTypeSet* actual)
 {
-    // The definite properties analysis happens on the active thread, so no new
+    // The definite properties analysis happens on the main thread, so no new
     // types can have been added to actual. The analysis may have updated the
     // contents of |frozen| though with new speculative types, and these need
     // to be reflected in |actual| for AddClearDefiniteFunctionUsesInScript
@@ -3856,80 +3856,77 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* g
 
     RootedFunction function(cx, this->function());
     Vector<uint32_t, 32> pcOffsets(cx);
-    JSRuntime::AutoProhibitActiveContextChange apacc(cx->runtime());
-    for (const CooperatingContext& target : cx->runtime()->cooperatingContexts()) {
-        for (AllScriptFramesIter iter(cx, target); !iter.done(); ++iter) {
-            {
-                AutoEnterOOMUnsafeRegion oomUnsafe;
-                if (!pcOffsets.append(iter.script()->pcToOffset(iter.pc())))
-                    oomUnsafe.crash("rollbackPartiallyInitializedObjects");
-            }
+    for (AllScriptFramesIter iter(cx); !iter.done(); ++iter) {
+        {
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            if (!pcOffsets.append(iter.script()->pcToOffset(iter.pc())))
+                oomUnsafe.crash("rollbackPartiallyInitializedObjects");
+        }
 
-            if (!iter.isConstructing() || !iter.matchCallee(cx, function))
-                continue;
+        if (!iter.isConstructing() || !iter.matchCallee(cx, function))
+            continue;
 
-            // Derived class constructors initialize their this-binding later and
-            // we shouldn't run the definite properties analysis on them.
-            MOZ_ASSERT(!iter.script()->isDerivedClassConstructor());
+        // Derived class constructors initialize their this-binding later and
+        // we shouldn't run the definite properties analysis on them.
+        MOZ_ASSERT(!iter.script()->isDerivedClassConstructor());
 
-            Value thisv = iter.thisArgument(cx);
-            if (!thisv.isObject() ||
-                thisv.toObject().hasLazyGroup() ||
-                thisv.toObject().group() != group)
-            {
-                continue;
-            }
+        Value thisv = iter.thisArgument(cx);
+        if (!thisv.isObject() ||
+            thisv.toObject().hasLazyGroup() ||
+            thisv.toObject().group() != group)
+        {
+            continue;
+        }
 
-            // Found a matching frame.
-            RootedPlainObject obj(cx, &thisv.toObject().as<PlainObject>());
+        // Found a matching frame.
+        RootedPlainObject obj(cx, &thisv.toObject().as<PlainObject>());
 
-            // Whether all identified 'new' properties have been initialized.
-            bool finished = false;
+        // Whether all identified 'new' properties have been initialized.
+        bool finished = false;
 
-            // If not finished, number of properties that have been added.
-            uint32_t numProperties = 0;
+        // If not finished, number of properties that have been added.
+        uint32_t numProperties = 0;
 
-            // Whether the current SETPROP is within an inner frame which has
-            // finished entirely.
-            bool pastProperty = false;
+        // Whether the current SETPROP is within an inner frame which has
+        // finished entirely.
+        bool pastProperty = false;
 
-            // Index in pcOffsets of the outermost frame.
-            int callDepth = pcOffsets.length() - 1;
+        // Index in pcOffsets of the outermost frame.
+        int callDepth = pcOffsets.length() - 1;
 
-            // Index in pcOffsets of the frame currently being checked for a SETPROP.
-            int setpropDepth = callDepth;
+        // Index in pcOffsets of the frame currently being checked for a SETPROP.
+        int setpropDepth = callDepth;
 
-            for (Initializer* init = initializerList;; init++) {
-                if (init->kind == Initializer::SETPROP) {
-                    if (!pastProperty && pcOffsets[setpropDepth] < init->offset) {
-                        // Have not yet reached this setprop.
-                        break;
-                    }
-                    // This setprop has executed, reset state for the next one.
-                    numProperties++;
-                    pastProperty = false;
-                    setpropDepth = callDepth;
-                } else if (init->kind == Initializer::SETPROP_FRAME) {
-                    if (!pastProperty) {
-                        if (pcOffsets[setpropDepth] < init->offset) {
-                            // Have not yet reached this inner call.
-                            break;
-                        } else if (pcOffsets[setpropDepth] > init->offset) {
-                            // Have advanced past this inner call.
-                            pastProperty = true;
-                        } else if (setpropDepth == 0) {
-                            // Have reached this call but not yet in it.
-                            break;
-                        } else {
-                            // Somewhere inside this inner call.
-                            setpropDepth--;
-                        }
-                    }
-                } else {
-                    MOZ_ASSERT(init->kind == Initializer::DONE);
-                    finished = true;
+        for (Initializer* init = initializerList;; init++) {
+            if (init->kind == Initializer::SETPROP) {
+                if (!pastProperty && pcOffsets[setpropDepth] < init->offset) {
+                    // Have not yet reached this setprop.
                     break;
                 }
+                // This setprop has executed, reset state for the next one.
+                numProperties++;
+                pastProperty = false;
+                setpropDepth = callDepth;
+            } else if (init->kind == Initializer::SETPROP_FRAME) {
+                if (!pastProperty) {
+                    if (pcOffsets[setpropDepth] < init->offset) {
+                        // Have not yet reached this inner call.
+                        break;
+                    } else if (pcOffsets[setpropDepth] > init->offset) {
+                        // Have advanced past this inner call.
+                        pastProperty = true;
+                    } else if (setpropDepth == 0) {
+                        // Have reached this call but not yet in it.
+                        break;
+                    } else {
+                        // Somewhere inside this inner call.
+                        setpropDepth--;
+                    }
+                }
+            } else {
+                MOZ_ASSERT(init->kind == Initializer::DONE);
+                finished = true;
+                break;
             }
 
             if (!finished) {
@@ -4352,15 +4349,15 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 
 TypeZone::TypeZone(Zone* zone)
   : zone_(zone),
-    typeLifoAlloc_(zone->group(), (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    generation(zone->group(), 0),
-    compilerOutputs(zone->group(), nullptr),
-    sweepTypeLifoAlloc(zone->group(), (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    sweepCompilerOutputs(zone->group(), nullptr),
-    sweepReleaseTypes(zone->group(), false),
-    sweepingTypes(zone->group(), false),
-    keepTypeScripts(zone->group(), false),
-    activeAnalysis(zone->group(), nullptr)
+    typeLifoAlloc_(zone, (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    generation(zone, 0),
+    compilerOutputs(zone, nullptr),
+    sweepTypeLifoAlloc(zone, (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    sweepCompilerOutputs(zone, nullptr),
+    sweepReleaseTypes(zone, false),
+    sweepingTypes(zone, false),
+    keepTypeScripts(zone, false),
+    activeAnalysis(zone, nullptr)
 {
 }
 
@@ -4456,9 +4453,8 @@ AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM()
     zone->types.setSweepingTypes(false);
 
     if (oom) {
-        JSRuntime* rt = zone->runtimeFromActiveCooperatingThread();
+        JSRuntime* rt = zone->runtimeFromMainThread();
         js::CancelOffThreadIonCompile(rt);
-        JSRuntime::AutoProhibitActiveContextChange apacc(rt);
         zone->setPreservingCode(false);
         zone->discardJitCode(rt->defaultFreeOp(), /* discardBaselineCode = */ false);
         zone->types.clearAllNewScriptsOnOOM();

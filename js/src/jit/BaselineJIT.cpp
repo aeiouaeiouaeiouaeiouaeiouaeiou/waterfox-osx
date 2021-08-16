@@ -54,7 +54,7 @@ ICStubSpace::freeAllAfterMinorGC(Zone* zone)
     if (zone->isAtomsZone())
         MOZ_ASSERT(allocator_.isEmpty());
     else
-        zone->runtimeFromActiveCooperatingThread()->gc.freeAllLifoBlocksAfterMinorGC(&allocator_);
+        zone->runtimeFromMainThread()->gc.freeAllLifoBlocksAfterMinorGC(&allocator_);
 }
 
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
@@ -1267,10 +1267,8 @@ jit::MarkActiveBaselineScripts(Zone* zone)
     if (zone->isAtomsZone())
         return;
     JSContext* cx = TlsContext.get();
-    for (const CooperatingContext& target : cx->runtime()->cooperatingContexts()) {
-        for (JitActivationIterator iter(cx, target); !iter.done(); ++iter) {
-            if (iter->compartment()->zone() == zone)
-                MarkActiveBaselineScripts(cx, iter);
-        }
+    for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
+        if (iter->compartment()->zone() == zone)
+            MarkActiveBaselineScripts(cx, iter);
     }
 }

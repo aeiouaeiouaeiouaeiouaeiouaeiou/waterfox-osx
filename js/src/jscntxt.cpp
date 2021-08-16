@@ -102,7 +102,7 @@ bool
 JSContext::init(ContextKind kind)
 {
     // Skip most of the initialization if this thread will not be running JS.
-    if (kind == ContextKind::Cooperative) {
+    if (kind == ContextKind::MainThread) {
         // Get a platform-native handle for this thread, used by js::InterruptRunningJitCode.
 #ifdef XP_WIN
         size_t openFlags = THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME |
@@ -164,7 +164,7 @@ js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRun
         return nullptr;
     }
 
-    if (!cx->init(ContextKind::Cooperative)) {
+    if (!cx->init(ContextKind::MainThread)) {
         runtime->destroyRuntime();
         js_delete(cx);
         js_delete(runtime);
@@ -172,39 +172,6 @@ js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRun
     }
 
     return cx;
-}
-
-JSContext*
-js::NewCooperativeContext(JSContext* siblingContext)
-{
-    MOZ_RELEASE_ASSERT(!TlsContext.get());
-
-    JSRuntime* runtime = siblingContext->runtime();
-
-    JSContext* cx = js_new<JSContext>(runtime, JS::ContextOptions());
-    if (!cx || !cx->init(ContextKind::Cooperative)) {
-        js_delete(cx);
-        return nullptr;
-    }
-
-    runtime->setNewbornActiveContext(cx);
-    return cx;
-}
-
-void
-js::YieldCooperativeContext(JSContext* cx)
-{
-    MOZ_ASSERT(cx == TlsContext.get());
-    MOZ_ASSERT(cx->runtime()->activeContext() == cx);
-    cx->runtime()->setActiveContext(nullptr);
-}
-
-void
-js::ResumeCooperativeContext(JSContext* cx)
-{
-    MOZ_ASSERT(cx == TlsContext.get());
-    MOZ_ASSERT(cx->runtime()->activeContext() == nullptr);
-    cx->runtime()->setActiveContext(cx);
 }
 
 static void
@@ -231,34 +198,17 @@ js::DestroyContext(JSContext* cx)
 
     cx->checkNoGCRooters();
 
-    // Cancel all off thread Ion compiles before destroying a cooperative
-    // context. Completed Ion compiles may try to interrupt arbitrary
-    // cooperative contexts which they have read off the owner context of a
-    // zone group. See HelperThread::handleIonWorkload.
+    // Cancel all off thread Ion compiles. Completed Ion compiles may try to
+    // interrupt this context. See HelperThread::handleIonWorkload.
     CancelOffThreadIonCompile(cx->runtime());
 
     FreeJobQueueHandling(cx);
 
-    if (cx->runtime()->cooperatingContexts().length() == 1) {
-        // Destroy the runtime along with its last context.
-        cx->runtime()->destroyRuntime();
-        js_delete(cx->runtime());
+    // Destroy the runtime along with its last context.
+    cx->runtime()->destroyRuntime();
+    js_delete(cx->runtime());
 
-        js_delete_poison(cx);
-    } else {
-        DebugOnly<bool> found = false;
-        for (size_t i = 0; i < cx->runtime()->cooperatingContexts().length(); i++) {
-            CooperatingContext& target = cx->runtime()->cooperatingContexts()[i];
-            if (cx == target.context()) {
-                cx->runtime()->cooperatingContexts().erase(&target);
-                found = true;
-                break;
-            }
-        }
-        MOZ_ASSERT(found);
-
-        cx->runtime()->deleteActiveContext(cx);
-    }
+    js_delete_poison(cx);
 }
 
 void
@@ -1317,7 +1267,7 @@ JSContext::alreadyReportedError()
 
 JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
   : runtime_(runtime),
-    kind_(ContextKind::Background),
+    kind_(ContextKind::HelperThread),
     threadNative_(0),
     helperThread_(nullptr),
     options_(options),
@@ -1416,7 +1366,7 @@ JSContext::~JSContext()
 {
     // Clear the ContextKind first, so that ProtectedData checks will allow us to
     // destroy this context even if the runtime is already gone.
-    kind_ = ContextKind::Background;
+    kind_ = ContextKind::HelperThread;
 
 #ifdef XP_WIN
     if (threadNative_)

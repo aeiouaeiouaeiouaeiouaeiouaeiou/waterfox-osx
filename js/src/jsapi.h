@@ -588,7 +588,7 @@ typedef enum JSFinalizeStatus {
 } JSFinalizeStatus;
 
 typedef void
-(* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, bool isZoneGC, void* data);
+(* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, void* data);
 
 typedef void
 (* JSWeakPointerZonesCallback)(JSContext* cx, void* data);
@@ -1031,23 +1031,6 @@ JS_ResumeCooperativeContext(JSContext* cx);
 extern JS_PUBLIC_API(JSContext*)
 JS_NewCooperativeContext(JSContext* siblingContext);
 
-namespace JS {
-
-// Class to relinquish exclusive access to all zone groups in use by this
-// thread. This allows other cooperative threads to enter the zone groups
-// and modify their contents.
-struct AutoRelinquishZoneGroups
-{
-    explicit AutoRelinquishZoneGroups(JSContext* cx);
-    ~AutoRelinquishZoneGroups();
-
-  private:
-    JSContext* cx;
-    mozilla::Vector<void*> enterList;
-};
-
-} // namespace JS
-
 // Destroy a context allocated with JS_NewContext or JS_NewCooperativeContext.
 // The context must be the current active context in the runtime, and after
 // this call the runtime will have no active context.
@@ -1074,31 +1057,6 @@ JS_EndRequest(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
 JS_SetFutexCanWait(JSContext* cx);
-
-namespace JS {
-
-// Single threaded execution callbacks are used to notify API clients that a
-// feature is in use on a context's runtime that is not yet compatible with
-// cooperatively multithreaded execution.
-//
-// Between a call to BeginSingleThreadedExecutionCallback and a corresponding
-// call to EndSingleThreadedExecutionCallback, only one thread at a time may
-// enter compartments in the runtime. The begin callback may yield as necessary
-// to permit other threads to finish up what they're doing, while the end
-// callback may not yield or otherwise operate on the runtime (it may be called
-// during GC).
-//
-// These callbacks may be left unspecified for runtimes which only ever have a
-// single context.
-typedef void (*BeginSingleThreadedExecutionCallback)(JSContext* cx);
-typedef void (*EndSingleThreadedExecutionCallback)(JSContext* cx);
-
-extern JS_PUBLIC_API(void)
-SetSingleThreadedExecutionCallbacks(JSContext* cx,
-                                    BeginSingleThreadedExecutionCallback begin,
-                                    EndSingleThreadedExecutionCallback end);
-
-} // namespace JS
 
 namespace js {
 
@@ -1765,7 +1723,7 @@ JS_RemoveFinalizeCallback(JSContext* cx, JSFinalizeCallback cb);
  *
  * To handle this, any part of the system that maintain weak pointers to
  * JavaScript GC things must register a callback with
- * JS_(Add,Remove)WeakPointer{ZoneGroup,Compartment}Callback(). This callback
+ * JS_(Add,Remove)WeakPointer{Zone,Compartment}Callback(). This callback
  * must then call JS_UpdateWeakPointerAfterGC() on all weak pointers it knows
  * about.
  *
@@ -2308,14 +2266,8 @@ enum ZoneSpecifier {
     // Use a particular existing zone.
     ExistingZone,
 
-    // Create a new zone with its own new zone group.
-    NewZoneInNewZoneGroup,
-
-    // Create a new zone in the same zone group as the system zone.
-    NewZoneInSystemZoneGroup,
-
-    // Create a new zone in the same zone group as another existing zone.
-    NewZoneInExistingZoneGroup
+    // Create a new zone.
+    NewZone
 };
 
 /**
@@ -2332,8 +2284,8 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     CompartmentCreationOptions()
       : addonId_(nullptr),
         traceGlobal_(nullptr),
-        zoneSpec_(NewZoneInSystemZoneGroup),
-        zonePointer_(nullptr),
+        zoneSpec_(NewZone),
+        zone_(nullptr),
         invisibleToDebugger_(false),
         mergeable_(false),
         preserveJitCode_(false),
@@ -2358,15 +2310,13 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         return *this;
     }
 
-    void* zonePointer() const { return zonePointer_; }
+    JS::Zone* zone() const { return zone_; }
     ZoneSpecifier zoneSpecifier() const { return zoneSpec_; }
 
     // Set the zone to use for the compartment. See ZoneSpecifier above.
     CompartmentCreationOptions& setSystemZone();
     CompartmentCreationOptions& setExistingZone(JSObject* obj);
-    CompartmentCreationOptions& setNewZoneInNewZoneGroup();
-    CompartmentCreationOptions& setNewZoneInSystemZoneGroup();
-    CompartmentCreationOptions& setNewZoneInExistingZoneGroup(JSObject* obj);
+    CompartmentCreationOptions& setNewZone();
 
     // Certain scopes (i.e. XBL compilation scopes) are implementation details
     // of the embedding, and references to them should never leak out to script.
@@ -2419,7 +2369,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     JSAddonId* addonId_;
     JSTraceOp traceGlobal_;
     ZoneSpecifier zoneSpec_;
-    void* zonePointer_; // Per zoneSpec_, either a Zone, ZoneGroup, or null.
+    JS::Zone* zone_;
     bool invisibleToDebugger_;
     bool mergeable_;
     bool preserveJitCode_;
@@ -4279,7 +4229,7 @@ CanDecodeOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t 
  * callback will eventually be invoked with the specified data and a token
  * for the compilation. The callback will be invoked while off thread,
  * so must ensure that its operations are thread safe. Afterwards, one of the
- * following functions must be invoked on the runtime's active thread:
+ * following functions must be invoked on the runtime's main thread:
  *
  * - FinishOffThreadScript, to get the result script (or nullptr on failure).
  * - CancelOffThreadScript, to free the resources without creating a script.
@@ -6284,7 +6234,7 @@ DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHan
 
 // Register an encoder on the given script source, such that all functions can
 // be encoded as they are parsed. This strategy is used to avoid blocking the
-// active thread in a non-interruptible way.
+// main thread in a non-interruptible way.
 //
 // The |script| argument of |StartIncrementalEncoding| and
 // |FinishIncrementalEncoding| should be the top-level script returned either as

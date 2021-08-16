@@ -94,8 +94,11 @@ extern MOZ_THREAD_LOCAL(JSContext*) TlsContext;
 
 enum class ContextKind
 {
-    Cooperative,
-    Background
+    // Context for the main thread of a JSRuntime.
+    MainThread,
+
+    // Context for a helper thread.
+    HelperThread
 };
 
 } /* namespace js */
@@ -131,7 +134,7 @@ struct JSContext : public JS::RootingContext,
     // currently operating on.
     void setRuntime(JSRuntime* rt);
 
-    bool isCooperativelyScheduled() const { return kind_ == js::ContextKind::Cooperative; }
+    bool isMainThreadContext() const { return kind_ == js::ContextKind::MainThread; }
     size_t threadNative() const { return threadNative_; }
 
     inline js::gc::ArenaLists* arenas() const { return arenas_; }
@@ -221,9 +224,7 @@ struct JSContext : public JS::RootingContext,
 
   private:
     // We distinguish between entering the atoms compartment and all other
-    // compartments. Entering the atoms compartment requires a lock. Also, we
-    // don't call enterZoneGroup when entering the atoms compartment since that
-    // can induce GC hazards.
+    // compartments. Entering the atoms compartment requires a lock.
     inline void enterNonAtomsCompartment(JSCompartment* c);
     inline void enterAtomsCompartment(JSCompartment* c,
                                       const js::AutoLockForExclusiveAccess& lock);
@@ -236,9 +237,6 @@ struct JSContext : public JS::RootingContext,
     inline void enterNullCompartment();
     inline void leaveCompartment(JSCompartment* oldCompartment,
                                  const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
-
-    inline void enterZoneGroup(js::ZoneGroup* group);
-    inline void leaveZoneGroup(js::ZoneGroup* group);
 
     void setHelperThread(js::HelperThread* helperThread);
     js::HelperThread* helperThread() const { return helperThread_; }
@@ -318,25 +316,9 @@ struct JSContext : public JS::RootingContext,
     friend class js::jit::DebugModeOSRVolatileJitFrameIter;
     friend void js::ReportOverRecursed(JSContext*, unsigned errorNumber);
 
-    // Returns to the embedding to allow other cooperative threads to run. We
-    // may do this if we need access to a ZoneGroup that is in use by another
-    // thread.
-    void yieldToEmbedding() {
-        (*yieldCallback_)(this);
-    }
-
-    void setYieldCallback(js::YieldCallback callback) {
-        yieldCallback_ = callback;
-    }
-
   private:
     static JS::Error reportedError;
     static JS::OOM reportedOOM;
-
-    // This callback is used to ask the embedding to allow other cooperative
-    // threads to run. We may do this if we need access to a ZoneGroup that is
-    // in use by another thread.
-    js::ThreadLocalData<js::YieldCallback> yieldCallback_;
 
   public:
     inline JS::Result<> boolToResult(bool ok);
@@ -482,12 +464,12 @@ struct JSContext : public JS::RootingContext,
     js::ThreadLocalData<bool> ionCompilingSafeForMinorGC;
 
     // Whether this thread is currently performing GC.  This thread could be the
-    // active thread or a helper thread while the active thread is running the
+    // main thread or a helper thread while the main thread is running the
     // collector.
     js::ThreadLocalData<bool> performingGC;
 
     // Whether this thread is currently sweeping GC things.  This thread could
-    // be the active thread or a helper thread while the active thread is running
+    // be the main thread or a helper thread while the main thread is running
     // the mutator.  This is used to assert that destruction of GCPtr only
     // happens when we are sweeping.
     js::ThreadLocalData<bool> gcSweeping;
@@ -556,7 +538,7 @@ struct JSContext : public JS::RootingContext,
 
     // Count of AutoKeepAtoms instances on the current thread's stack. When any
     // instances exist, atoms in the runtime will not be collected. Threads
-    // parsing off the active thread do not increment this value, but the presence
+    // parsing off the main thread do not increment this value, but the presence
     // of any such threads also inhibits collection of atoms. We don't scan the
     // stacks of exclusive threads, so we need to avoid collecting their
     // objects in another way. The only GC thing pointers they have are to
@@ -878,6 +860,16 @@ struct JSContext : public JS::RootingContext,
         return handlingJitInterrupt_;
     }
 
+    void* addressOfInterrupt() {
+        return &interrupt_;
+    }
+    void* addressOfJitStackLimit() {
+        return &jitStackLimit;
+    }
+    void* addressOfJitStackLimitNoInterrupt() {
+        return &jitStackLimitNoInterrupt;
+    }
+
     /* Futex state, used by Atomics.wait() and Atomics.wake() on the Atomics object */
     js::FutexThread fx;
 
@@ -956,10 +948,10 @@ JSContext::boolToResult(bool ok)
 }
 
 inline JSContext*
-JSRuntime::activeContextFromOwnThread()
+JSRuntime::mainContextFromOwnThread()
 {
-    MOZ_ASSERT(activeContext() == js::TlsContext.get());
-    return activeContext();
+    MOZ_ASSERT(mainContextFromAnyThread() == js::TlsContext.get());
+    return mainContextFromAnyThread();
 }
 
 namespace js {
@@ -1006,15 +998,6 @@ struct MOZ_RAII AutoResolving {
  */
 extern JSContext*
 NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRuntime);
-
-extern JSContext*
-NewCooperativeContext(JSContext* siblingContext);
-
-extern void
-YieldCooperativeContext(JSContext* cx);
-
-extern void
-ResumeCooperativeContext(JSContext* cx);
 
 extern void
 DestroyContext(JSContext* cx);

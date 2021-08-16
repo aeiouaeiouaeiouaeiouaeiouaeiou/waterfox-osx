@@ -24,6 +24,8 @@ pref("preferences.allow.omt-write", false);
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.compatMode.firefox", true);
+pref("general.useragent.compatMode.version", "68.0");
+pref("general.useragent.appVersionIsLong", true);
 
 pref("general.useragent.updates.enabled", true);
 pref("general.useragent.updates.url", "");
@@ -929,9 +931,6 @@ pref("canvas.filters.enabled", true);
 // Add support for canvas path objects
 pref("canvas.path.enabled", true);
 pref("canvas.capturestream.enabled", true);
-
-// Disable the ImageBitmap-extensions for now.
-pref("canvas.imagebitmap_extensions.enabled", false);
 
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug

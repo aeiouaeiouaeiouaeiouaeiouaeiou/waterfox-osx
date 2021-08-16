@@ -941,11 +941,13 @@ private:
 class ReportErrorToConsoleRunnable final : public WorkerRunnable
 {
   const char* mMessage;
+  const nsTArray<nsString> mParams;
 
 public:
   // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
   static void
-  Report(WorkerPrivate* aWorkerPrivate, const char* aMessage)
+  Report(WorkerPrivate* aWorkerPrivate, const char* aMessage,
+         const nsTArray<nsString>& aParams)
   {
     if (aWorkerPrivate) {
       aWorkerPrivate->AssertIsOnWorkerThread();
@@ -956,23 +958,30 @@ public:
     // Now fire a runnable to do the same on the parent's thread if we can.
     if (aWorkerPrivate) {
       RefPtr<ReportErrorToConsoleRunnable> runnable =
-        new ReportErrorToConsoleRunnable(aWorkerPrivate, aMessage);
+        new ReportErrorToConsoleRunnable(aWorkerPrivate, aMessage, aParams);
       runnable->Dispatch();
       return;
     }
 
+    uint16_t paramCount = aParams.Length();
+    const char16_t** params = new const char16_t*[paramCount];
+    for (uint16_t i=0; i<paramCount; ++i) {
+      params[i] = aParams[i].get();
+    }
+
     // Log a warning to the console.
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    NS_LITERAL_CSTRING("DOM"),
-                                    nullptr,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    aMessage);
+                                    NS_LITERAL_CSTRING("DOM"), nullptr,
+                                    nsContentUtils::eDOM_PROPERTIES, aMessage,
+                                    paramCount ? params : nullptr, paramCount);
+    delete[] params;
   }
 
 private:
-  ReportErrorToConsoleRunnable(WorkerPrivate* aWorkerPrivate, const char* aMessage)
+  ReportErrorToConsoleRunnable(WorkerPrivate* aWorkerPrivate, const char* aMessage,
+                               const nsTArray<nsString>& aParams)
   : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount),
-    mMessage(aMessage)
+    mMessage(aMessage), mParams(aParams)
   { }
 
   virtual void
@@ -989,7 +998,7 @@ private:
   {
     WorkerPrivate* parent = aWorkerPrivate->GetParent();
     MOZ_ASSERT_IF(!parent, NS_IsMainThread());
-    Report(parent, mMessage);
+    Report(parent, mMessage, mParams);
     return true;
   }
 };
@@ -4715,6 +4724,11 @@ WorkerPrivate::Constructor(JSContext* aCx,
     return nullptr;
   }
 
+  // From this point on (worker thread has been started) we
+  // must keep ourself alive. We can now only be cleared by
+  // ClearSelfAndParentEventTargetRef().
+  worker->mSelfRef = worker;
+
   worker->EnableDebugger();
 
   MOZ_DIAGNOSTIC_ASSERT(worker->PrincipalIsValid());
@@ -4725,8 +4739,6 @@ WorkerPrivate::Constructor(JSContext* aCx,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
-
-  worker->mSelfRef = worker;
 
   return worker.forget();
 }
@@ -6407,12 +6419,21 @@ WorkerPrivate::ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
 void
 WorkerPrivate::ReportErrorToConsole(const char* aMessage)
 {
+  nsTArray<nsString> emptyParams;
+  WorkerPrivate::ReportErrorToConsole(aMessage, emptyParams);
+}
+
+// static
+void
+WorkerPrivate::ReportErrorToConsole(const char* aMessage,
+                                    const nsTArray<nsString>& aParams)
+{
   WorkerPrivate* wp = nullptr;
   if (!NS_IsMainThread()) {
     wp = GetCurrentThreadWorkerPrivate();
   }
 
-  ReportErrorToConsoleRunnable::Report(wp, aMessage);
+  ReportErrorToConsoleRunnable::Report(wp, aMessage, aParams);
 }
 
 int32_t
