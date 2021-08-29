@@ -1982,10 +1982,12 @@ MOZ_CONFIG_ICU()
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
+	$_COMPILATION_CFLAGS \
 	$CFLAGS`
 
 CXXFLAGS=`echo \
 	$_WARNINGS_CXXFLAGS \
+	$_COMPILATION_CXXFLAGS \
 	$CXXFLAGS`
 
 COMPILE_CFLAGS=`echo \
@@ -2075,7 +2077,7 @@ dnl ========================================================
 
 MOZ_CHECK_ALLOCATOR
 
-AC_CHECK_FUNCS(setlocale localeconv)
+AC_CHECK_FUNCS(localeconv)
 
 AC_SUBST(MOZILLA_VERSION)
 
