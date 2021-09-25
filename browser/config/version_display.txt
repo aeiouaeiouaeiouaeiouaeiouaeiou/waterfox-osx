@@ -1,1 +1,1 @@
-G3.2.5-osxfix
+G3.2.6-osxfix
