@@ -1,7 +1,8 @@
 # Very simplified mozconfig because builds are made in native OS X environment
 
+export MAKE=gmake
 export STRIP=strip
-export RUSTFLAGS="-C target-cpu=core2"
+export RUSTFLAGS="-C opt-level=3 -C target-cpu=core2"
 X=$(getconf NPROCESSORS_ONLN 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
 mk_add_options MOZ_MAKE_FLAGS=-j${X}
 ac_add_options --target=x86_64-apple-darwin
